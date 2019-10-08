@@ -78,32 +78,40 @@ def show_camera_image(camera_image, camera_labels, output, file,no):
   # cv2.imshow('img',img)
   # cv2.waitKey(0)
 
-def extract(file, filepath, output):
+def extract(file, filepath, output,cur_num,total):
     dataset = tf.data.TFRecordDataset(filepath, compression_type='')
+    print('currently processing No.{} segment file:{}, ...'.format(cur_num,file))
     no = 1
     for data in dataset:
         frame = open_dataset.Frame()
         frame.ParseFromString(bytearray(data.numpy()))
-        print(no)
         for index, image in enumerate(frame.images):
             show_camera_image(image, frame.camera_labels,output,file,no)
+        print('{}/{} {}frames finished'.format(cur_num,total,no))
         no += 1
 
-
-
-
-    # (range_images, camera_projections,
-    #  range_image_top_pose) = frame_utils.parse_range_image_and_camera_projection(
-    #     frame)
-
-    # for view in frame.camera_labels:
-    #     for label in view.labels:
-    #         print('{},{},{},{},{}'.format(label.box.center_x,label.box.center_y,label.box.width,label.box.length,label.type))
-#waymo dataset file name
-file = 'segment-15533468984793020049_800_000_820_000_with_camera_labels.tfrecord'
-#waymo dataset file location path
-filepath = '/home/boyu/Downloads/'+file
+#waymo dataset segment file location path
+filelistpath = '/home/boyu/Downloads'
 #output to the specific folder
 output = '/home/boyu/Documents/waymo_open_dataset'
 
-extract(file,filepath,output)
+filelist_raw = os.popen('cd {}; ls'.format(filelistpath))
+filelist_raw = filelist_raw.read()
+filelist_raw = filelist_raw.split()
+filelist = []
+for file in filelist_raw:
+    if os.path.exists(output+'/'+file.split('.')[0].strip()):
+        continue
+    if not file.endswith('.tfrecord'):
+        continue
+    filelist.append(file)
+total = len(filelist)
+cur_num = 1
+print('totally {} file to extract, processing...'.format(total))
+#error segment-15578655130939579324_620_000_640_000_with_camera_labels
+#error segment-2739239662326039445_5890_320_5910_320_with_camera_labels
+#error segment-3002379261592154728_2256_691_2276_691_with_camera_labels
+for file in filelist:
+    filepath = filelistpath+'/'+file
+    extract(file,filepath,output,cur_num,total)
+    cur_num += 1
